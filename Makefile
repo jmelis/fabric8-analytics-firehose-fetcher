@@ -1,4 +1,16 @@
-REGISTRY?=registry.devshift.net
+ifeq ($(TARGET),rhel)
+	ifndef DOCKER_REGISTRY
+		$(error DOCKER_REGISTRY is not set)
+	endif
+
+	DOCKER_IMAGE_URL := $(DOCKER_REGISTRY)/$(DOCKER_IMAGE_TARGET)
+	REGISTRY := $(DOCKER_REGISTRY)
+	DOCKERFILE := Dockerfile.rhel
+else
+	REGISTRY ?= registry.devshift.net
+	DOCKERFILE := Dockerfile
+endif
+
 REPOSITORY?=fabric8-analytics/f8a-firehose-fetcher
 DEFAULT_TAG=latest
 
@@ -7,10 +19,10 @@ DEFAULT_TAG=latest
 all: fast-docker-build
 
 docker-build:
-	docker build --no-cache -t $(REGISTRY)/$(REPOSITORY):$(DEFAULT_TAG) .
+	docker build --no-cache -f $(DOCKERFILE) -t $(REGISTRY)/$(REPOSITORY):$(DEFAULT_TAG) .
 
 fast-docker-build:
-	docker build -t $(REGISTRY)/$(REPOSITORY):$(DEFAULT_TAG) .
+	docker build -f $(DOCKERFILE) -t $(REGISTRY)/$(REPOSITORY):$(DEFAULT_TAG) .
 
 test: fast-docker-build
 	./runtest.sh
